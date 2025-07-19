@@ -11,6 +11,10 @@ clock = pygame.time.Clock()
 running = True
 dt = 0
 
+# Version
+VERSION = "0.0.1 Initial version"
+SHOW_VERSION = True
+
 # Music and Sound
 pygame.mixer.music.load("Assets/ambient_background.mp3")
 pygame.mixer.music.set_volume(0.1)
@@ -282,6 +286,13 @@ def main():
         display.blit(player.image, (player.rect.x - camera_offset_x, player.rect.y - camera_offset_y))
 
         screen.blit(pygame.transform.scale(display, (screen_width, screen_height)), (0, 0))
+
+        if SHOW_VERSION:
+            font = pygame.font.Font(None, 24)
+            text = font.render(VERSION, True, (255, 0, 0))
+            text_rect = text.get_rect(bottomright=(screen_width - 10, screen_height - 10))
+            screen.blit(text, text_rect)
+
         pygame.display.flip()
         dt = clock.tick(60) / 1000
     pygame.quit()

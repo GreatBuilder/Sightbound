@@ -21,7 +21,7 @@ def draw_text(text, font, text_col, x, y):
     img = font.render(text)
     screen.blit(img, (x, y))
 
-def get_interactable_object(player_pos, game_map, boxes, vents):
+def get_interactable_object(player_pos, game_map, boxes, vents, keys):
     tile_x = int(player_pos[0] // 16)
     tile_y = int(player_pos[1] // 16)
 
@@ -30,6 +30,12 @@ def get_interactable_object(player_pos, game_map, boxes, vents):
         for vent in vents:
             if vent.rect.collidepoint(player_pos):
                 return vent
+    
+    # Check for key interaction (standing on it)
+    if game_map[tile_y][tile_x] == 4: # 4 is key
+        for key in keys:
+            if key.rect.collidepoint(player_pos):
+                return key
 
     # Check for box interaction (next to it)
     if game_map[tile_y][tile_x] == 0: # Must be on a floor tile
@@ -51,6 +57,7 @@ def main():
     floor_sprites = pygame.sprite.Group()
     box_sprites = pygame.sprite.Group()
     vent_sprites = pygame.sprite.Group()
+    key_sprites = pygame.sprite.Group()
     player = None
 
     for row_index, row in enumerate(game_map):
@@ -71,6 +78,10 @@ def main():
                 vent = Vent(x, y)
                 vent_sprites.add(vent)
                 all_sprites.add(vent)
+            elif tile == 4:
+                key = Key(x, y)
+                key_sprites.add(key)
+                all_sprites.add(key)
             elif tile == 0 and player is None:
                 player = Player(x + 8, y + 8)
 
@@ -84,12 +95,15 @@ def main():
                 running = False
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_e:
-                    if player.hidden:
-                        player.unhide()
-                    else:
-                        interactable = get_interactable_object(player.pos, game_map, box_sprites, vent_sprites)
-                        if interactable:
-                            player.hide(interactable)
+                    interactable = get_interactable_object(player.pos, game_map, box_sprites, vent_sprites, key_sprites)
+                    if interactable == key:
+                        print("player picked up key")
+                    else: # its a box or a vent (have hiding attributes)
+                        if player.hidden:
+                            player.unhide()
+                        else:
+                            if interactable:
+                                player.hide(interactable)
 
         display.fill((0, 0, 0))
 

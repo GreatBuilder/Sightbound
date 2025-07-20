@@ -1,12 +1,20 @@
 import pygame
 
 from assets import (
-    wall_img, floor_img, box_img, vent_img,
+    wall_img, floor_img, box_img, vent_img, key_img,
     player_idle_imgs, player_walk_imgs,
     footsteps_sound, box_open_sound, box_close_sound,
     vent_open_sound, vent_close_sound
 )
 from settings import game_map
+from inventory import DroppedItem
+
+class Key(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.image = key_img
+        self.rect = self.image.get_rect(topleft=(x, y))
+        self.hitbox = self.rect.inflate(-2, -2)
 
 class Wall(pygame.sprite.Sprite):
     def __init__(self, x, y):

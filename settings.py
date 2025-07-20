@@ -5,7 +5,7 @@ screen_width = 850
 screen_height = 850
 
 # Version
-VERSION = "0.0.4 Doors and Keys"
+VERSION = "Version 0.0.5 Added Main Menu"
 SHOW_VERSION = True
 
 # Lighting

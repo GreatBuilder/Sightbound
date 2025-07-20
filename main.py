@@ -13,9 +13,6 @@ clock = pygame.time.Clock()
 running = True
 dt = 0
 
-# Game states
-game_paused = False
-
 pygame.mixer.music.play(-1)
 
 def draw_text(text, font, text_col, x, y):
@@ -57,6 +54,72 @@ def get_interactable_object(player, game_map, boxes, vents, keys, doors):
                 return box
 
     return None
+
+# MAIN MENU
+def main_menu():
+    play_btn_hovered = False
+    settings_gear_hovered = False
+    while True:
+        play_btn_rect = play_btn_img.get_rect(center=(screen_width // 2, (screen_height // 2) + 325))
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return False  # Quit
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    return True  # Play
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if play_btn_rect.collidepoint(event.pos):
+                    return True # Play
+
+        screen.fill((0, 0, 0))
+        screen.blit(main_menu_img, (0, 0))
+
+        settings_gear_rect = settings_gear_img.get_rect(bottomright=(screen_width - 10, screen_height - 10))
+        
+        # play button hover
+        if play_btn_rect.collidepoint(pygame.mouse.get_pos()):
+            scaled_play_btn_img = pygame.transform.scale(play_btn_img, (210, 210))
+            if not play_btn_hovered:
+                menu_btn_sounds[0].play()
+                play_btn_hovered = True
+        else:
+            scaled_play_btn_img = pygame.transform.scale(play_btn_img, (200, 200))
+            if play_btn_hovered:
+                menu_btn_sounds[1].play()
+                play_btn_hovered = False
+
+        scaled_play_btn_rect = scaled_play_btn_img.get_rect(center=(screen_width // 2, (screen_height // 2) + 325))
+
+        # update play button on the screen
+        screen.blit(scaled_play_btn_img, scaled_play_btn_rect)
+
+        # settings gear hover
+        if settings_gear_rect.collidepoint(pygame.mouse.get_pos()):
+            scaled_settings_gear_img = pygame.transform.scale(settings_gear_img, (80, 80))
+            if not settings_gear_hovered:
+                menu_btn_sounds[0].play()
+                settings_gear_hovered = True
+        else:
+            scaled_settings_gear_img = pygame.transform.scale(settings_gear_img, (75, 75))
+            if settings_gear_hovered:
+                menu_btn_sounds[1].play()
+                settings_gear_hovered = False
+            
+
+        # update settings gear button on the screen
+        scaled_settings_gear_rect = scaled_settings_gear_img.get_rect(bottomright=(screen_width - 10, screen_height - 10))
+        screen.blit(scaled_settings_gear_img, scaled_settings_gear_rect)
+
+        # version text
+        if SHOW_VERSION:
+            font = pygame.font.Font(None, 24)
+            text = font.render(VERSION, True, (255, 0, 0))
+            text_rect = text.get_rect(bottomleft=(10, screen_height - 10))
+            screen.blit(text, text_rect)
+
+        pygame.display.flip()
+        clock.tick(60)
 
 def main():
     global running, dt
@@ -179,11 +242,13 @@ def main():
         if SHOW_VERSION:
             font = pygame.font.Font(None, 24)
             text = font.render(VERSION, True, (255, 0, 0))
-            text_rect = text.get_rect(bottomright=(screen_width - 10, screen_height - 10))
+            text_rect = text.get_rect(bottomleft=(10, screen_height - 10))
             screen.blit(text, text_rect)
 
         pygame.display.flip()
         dt = clock.tick(60) / 1000
-    pygame.quit()
 
-main()
+if main_menu():
+    main()
+
+pygame.quit()

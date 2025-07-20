@@ -1,4 +1,5 @@
 class ItemType:
-    def __init__(self, name, img):
+    def __init__(self, name, world_img, inv_img):
         self.name = name
-        self.inv_img = img
+        self.world_img = world_img
+        self.inv_img = inv_img

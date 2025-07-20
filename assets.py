@@ -9,6 +9,8 @@ box_open_sound = pygame.mixer.Sound("Assets/box_open.mp3")
 box_close_sound = pygame.mixer.Sound("Assets/box_close.mp3")
 vent_open_sound = pygame.mixer.Sound("Assets/vent_open.mp3")
 vent_close_sound = pygame.mixer.Sound("Assets/vent_close.mp3")
+key_pickup_sound = pygame.mixer.Sound("Assets/key_pickup.mp3")
+key_drop_sound = pygame.mixer.Sound("Assets/key_drop.mp3")
 
 # Set volumes
 pygame.mixer.music.set_volume(0.1)
@@ -17,6 +19,8 @@ box_open_sound.set_volume(0.1)
 box_close_sound.set_volume(0.1)
 vent_open_sound.set_volume(0.3)
 vent_close_sound.set_volume(0.3)
+key_pickup_sound.set_volume(0.3)
+key_drop_sound.set_volume(0.3)
 
 # Images
 player_idle_imgs = [pygame.image.load("Assets/Idle1.png"), pygame.image.load("Assets/Idle2.png"), pygame.image.load("Assets/Idle3.png"), pygame.image.load("Assets/Idle4.png")]
@@ -30,8 +34,9 @@ vent_img = pygame.image.load("Assets/Vent.png") # 3 on the map
 key_img = pygame.image.load("Assets/Key.png") # 4 on the map
 key_inv_img = pygame.image.load("Assets/Key_inv.png")
 inv_slot_img = pygame.image.load("Assets/inventory_slot.png")
+inv_select_img = pygame.image.load("Assets/Inv_Select.png")
 
 from item_type import ItemType
 
 # Item Definitions
-key_item = ItemType(name="Key", img=key_inv_img)
+key_item = ItemType(name="Key", world_img=key_img, inv_img=key_inv_img)

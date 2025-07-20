@@ -15,6 +15,14 @@ class Key(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(topleft=(x, y))
         self.hitbox = self.rect.inflate(-2, -2)
 
+
+class DroppedItem(pygame.sprite.Sprite):
+    def __init__(self, x, y, item_type):
+        super().__init__()
+        self.item_type = item_type
+        self.image = self.item_type.world_img
+        self.rect = self.image.get_rect(center=(x, y))
+
 class Wall(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()

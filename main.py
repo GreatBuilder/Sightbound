@@ -35,7 +35,8 @@ def get_interactable_object(player_pos, game_map, boxes, vents, keys):
     # Check for key interaction (standing on it)
     if game_map[tile_y][tile_x] == 4: # 4 is key
         for key in keys:
-            if key.rect.collidepoint(player_pos):
+            # Check if the key's topleft corner matches the tile's topleft corner
+            if key.rect.x // 16 == tile_x and key.rect.y // 16 == tile_y:
                 return key
 
     # Check for box interaction (standing on it or next to it)
@@ -95,7 +96,7 @@ def main():
         print("No starting position for player found!")
         return
 
-    inventory = Inventory(inv_slot_img)
+    inventory = Inventory(inv_slot_img, inv_select_img)
 
     # Lighting surface
     fog = pygame.Surface((display.get_width(), display.get_height()), pygame.SRCALPHA)
@@ -109,12 +110,37 @@ def main():
                     interactable = get_interactable_object(player.pos, game_map, box_sprites, vent_sprites, key_sprites)
                     if isinstance(interactable, Key):
                         inventory.add_item(key_item)
+                        # Update the map to show the key is gone
+                        tile_x = int(interactable.rect.x // 16)
+                        tile_y = int(interactable.rect.y // 16)
+                        game_map[tile_y][tile_x] = 0 # Set tile back to floor
                         interactable.kill()
                     elif isinstance(interactable, (Box, Vent)):
                         if player.hidden:
                             player.unhide()
                         else:
                             player.hide(interactable)
+                if event.key == pygame.K_1:
+                    inventory.selected_slot = 0
+                if event.key == pygame.K_2:
+                    inventory.selected_slot = 1
+                if event.key == pygame.K_3:
+                    inventory.selected_slot = 2
+                if event.key == pygame.K_4:
+                    inventory.selected_slot = 3
+                if event.key == pygame.K_q:
+                    dropped_item_type = inventory.drop_item()
+                    if dropped_item_type:
+                        if dropped_item_type == key_item:
+                            key_drop_sound.play()
+                        tile_x = int(player.pos.x // 16)
+                        tile_y = int(player.pos.y // 16)
+                        # Prevent dropping items in walls or boxes
+                        if game_map[tile_y][tile_x] not in [1, 2]:
+                            game_map[tile_y][tile_x] = 4 # Mark as key
+                            new_item = Key(tile_x * 16, tile_y * 16) # Create at topleft of tile
+                            all_sprites.add(new_item)
+                            key_sprites.add(new_item)
 
         display.fill((0, 0, 0))
 

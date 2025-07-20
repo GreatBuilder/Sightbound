@@ -1,10 +1,17 @@
+import pygame
+
 # Screen dimensions
 screen_width = 850
 screen_height = 850
 
 # Version
-VERSION = "0.0.2 Added Key"
+VERSION = "0.0.3 Lighting and Inventory"
 SHOW_VERSION = True
+
+# Lighting
+NIGHT_COLOR = (5, 5, 5, 252)
+LIGHT_RADIUS = 20
+LIGHT_COLOR = (20, 20, 20, 220)
 
 # Game Map
 game_map = [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],

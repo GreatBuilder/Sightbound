@@ -7,7 +7,6 @@ from assets import (
     vent_open_sound, vent_close_sound
 )
 from settings import game_map
-from inventory import DroppedItem
 
 class Key(pygame.sprite.Sprite):
     def __init__(self, x, y):

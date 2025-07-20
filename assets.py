@@ -28,8 +28,10 @@ wall_img = pygame.image.load("Assets/Wall.png") # 1 on the map
 box_img = pygame.image.load("Assets/Box.png") # 2 on the map
 vent_img = pygame.image.load("Assets/Vent.png") # 3 on the map
 key_img = pygame.image.load("Assets/Key.png") # 4 on the map
+key_inv_img = pygame.image.load("Assets/Key_inv.png")
+inv_slot_img = pygame.image.load("Assets/inventory_slot.png")
 
-from inventory import ItemType
+from item_type import ItemType
 
 # Item Definitions
-key_item = ItemType(name="Key", icon="Key.png")
+key_item = ItemType(name="Key", img=key_inv_img)

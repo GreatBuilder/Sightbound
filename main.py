@@ -1,7 +1,8 @@
 import pygame
 from settings import *
 from assets import *
-from sprites import *
+from sprites import Player, Wall, Floor, Box, Vent, Key
+from inventory import Inventory
 
 # pygame setup
 pygame.init()
@@ -18,7 +19,7 @@ game_paused = False
 pygame.mixer.music.play(-1)
 
 def draw_text(text, font, text_col, x, y):
-    img = font.render(text)
+    img = font.render(text, True, text_col)
     screen.blit(img, (x, y))
 
 def get_interactable_object(player_pos, game_map, boxes, vents, keys):
@@ -37,8 +38,12 @@ def get_interactable_object(player_pos, game_map, boxes, vents, keys):
             if key.rect.collidepoint(player_pos):
                 return key
 
-    # Check for box interaction (next to it)
-    if game_map[tile_y][tile_x] == 0: # Must be on a floor tile
+    # Check for box interaction (standing on it or next to it)
+    if game_map[tile_y][tile_x] == 2: # 2 is box
+        for box in boxes:
+            if box.rect.collidepoint(player_pos):
+                return box
+    elif game_map[tile_y][tile_x] == 0: # Must be on a floor tile to enter
         for dx, dy in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
             check_x, check_y = tile_x + dx, tile_y + dy
             if 0 <= check_y < len(game_map) and 0 <= check_x < len(game_map[0]):
@@ -58,6 +63,7 @@ def main():
     box_sprites = pygame.sprite.Group()
     vent_sprites = pygame.sprite.Group()
     key_sprites = pygame.sprite.Group()
+
     player = None
 
     for row_index, row in enumerate(game_map):
@@ -85,9 +91,14 @@ def main():
             elif tile == 0 and player is None:
                 player = Player(x + 8, y + 8)
 
-    if not player:
+    if player is None:
         print("No starting position for player found!")
         return
+
+    inventory = Inventory(inv_slot_img)
+
+    # Lighting surface
+    fog = pygame.Surface((display.get_width(), display.get_height()), pygame.SRCALPHA)
 
     while running:
         for event in pygame.event.get():
@@ -96,14 +107,14 @@ def main():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_e:
                     interactable = get_interactable_object(player.pos, game_map, box_sprites, vent_sprites, key_sprites)
-                    if interactable == key:
-                        print("player picked up key")
-                    else: # its a box or a vent (have hiding attributes)
+                    if isinstance(interactable, Key):
+                        inventory.add_item(key_item)
+                        interactable.kill()
+                    elif isinstance(interactable, (Box, Vent)):
                         if player.hidden:
                             player.unhide()
                         else:
-                            if interactable:
-                                player.hide(interactable)
+                            player.hide(interactable)
 
         display.fill((0, 0, 0))
 
@@ -116,6 +127,14 @@ def main():
             display.blit(sprite.image, (sprite.rect.x - camera_offset_x, sprite.rect.y - camera_offset_y))
 
         display.blit(player.image, (player.rect.x - camera_offset_x, player.rect.y - camera_offset_y))
+
+        # Render lighting
+        fog.fill(NIGHT_COLOR)
+        player_center_on_display = (player.rect.centerx - camera_offset_x, player.rect.centery - camera_offset_y)
+        pygame.draw.circle(fog, LIGHT_COLOR, player_center_on_display, LIGHT_RADIUS)
+        display.blit(fog, (0, 0))
+
+        inventory.draw(display)
 
         screen.blit(pygame.transform.scale(display, (screen_width, screen_height)), (0, 0))
 

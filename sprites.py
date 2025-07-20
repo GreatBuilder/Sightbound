@@ -1,7 +1,7 @@
 import pygame
 
 from assets import (
-    wall_img, floor_img, box_img, vent_img, key_img,
+    wall_img, floor_img, box_img, vent_img, key_img, door_img,
     player_idle_imgs, player_walk_imgs,
     footsteps_sound, box_open_sound, box_close_sound,
     vent_open_sound, vent_close_sound
@@ -22,6 +22,17 @@ class DroppedItem(pygame.sprite.Sprite):
         self.item_type = item_type
         self.image = self.item_type.world_img
         self.rect = self.image.get_rect(center=(x, y))
+
+class Door(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.image = door_img
+        self.rect = self.image.get_rect(topleft=(x, y))
+        self.hitbox = self.rect.inflate(-2, -2)
+
+    def unlock(self):
+        game_map[self.rect.y // 16][self.rect.x // 16] = 0
+        self.kill()
 
 class Wall(pygame.sprite.Sprite):
     def __init__(self, x, y):
@@ -113,7 +124,7 @@ class Player(pygame.sprite.Sprite):
         self.hidden = False
         self.hiding_spot = None
 
-    def update(self, dt, walls, boxes):
+    def update(self, dt, walls, boxes, doors):
         if self.hidden:
             self.animate(dt)
             return
@@ -145,7 +156,7 @@ class Player(pygame.sprite.Sprite):
         self.pos.x += vec.x * self.speed * dt
         self.rect.centerx = round(self.pos.x)
         
-        all_obstacles = walls.sprites() + boxes.sprites()
+        all_obstacles = walls.sprites() + boxes.sprites() + doors.sprites()
         for obstacle in all_obstacles:
             hitbox = getattr(obstacle, 'hitbox', obstacle.rect)
             if self.rect.colliderect(hitbox):

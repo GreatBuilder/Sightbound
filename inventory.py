@@ -31,6 +31,11 @@ class Inventory:
             return item_to_drop
         return None
 
+    def get_selected_item(self):
+        if 0 <= self.selected_slot < len(self.items):
+            return self.items[self.selected_slot]
+        return None
+
     def draw(self, surface):
         if not self.is_open:
             return

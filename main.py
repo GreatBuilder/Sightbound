@@ -1,7 +1,7 @@
 import pygame
 from settings import *
 from assets import *
-from sprites import Player, Wall, Floor, Box, Vent, Key
+from sprites import Player, Wall, Floor, Box, Vent, Key, Door
 from inventory import Inventory
 
 # pygame setup
@@ -22,36 +22,39 @@ def draw_text(text, font, text_col, x, y):
     img = font.render(text, True, text_col)
     screen.blit(img, (x, y))
 
-def get_interactable_object(player_pos, game_map, boxes, vents, keys):
-    tile_x = int(player_pos[0] // 16)
-    tile_y = int(player_pos[1] // 16)
+def get_interactable_object(player, game_map, boxes, vents, keys, doors):
+    player_tile_x = int(player.pos[0] // 16)
+    player_tile_y = int(player.pos[1] // 16)
 
-    # Check for vent interaction (standing on it)
-    if game_map[tile_y][tile_x] == 3: # 3 is vent
+    # Priority 1: Check for objects the player is colliding with (e.g., keys on the ground)
+    for key in keys:
+        if key.rect.colliderect(player.rect):
+            return key
+
+    # Priority 2: Check for objects adjacent to the player (e.g., doors, boxes to hide in)
+    for dx, dy in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
+        check_x, check_y = player_tile_x + dx, player_tile_y + dy
+        if 0 <= check_y < len(game_map) and 0 <= check_x < len(game_map[0]):
+            tile_content = game_map[check_y][check_x]
+            if tile_content == 5:  # Door
+                for door in doors:
+                    if door.rect.x // 16 == check_x and door.rect.y // 16 == check_y:
+                        return door
+            elif tile_content == 2:  # Box
+                for box in boxes:
+                    if box.rect.x // 16 == check_x and box.rect.y // 16 == check_y:
+                        return box
+
+    # Priority 3: Check for objects the player is standing on (e.g., vents, boxes)
+    tile_under_player = game_map[player_tile_y][player_tile_x]
+    if tile_under_player == 3:  # Vent
         for vent in vents:
-            if vent.rect.collidepoint(player_pos):
+            if vent.rect.collidepoint(player.pos):
                 return vent
-    
-    # Check for key interaction (standing on it)
-    if game_map[tile_y][tile_x] == 4: # 4 is key
-        for key in keys:
-            # Check if the key's topleft corner matches the tile's topleft corner
-            if key.rect.x // 16 == tile_x and key.rect.y // 16 == tile_y:
-                return key
-
-    # Check for box interaction (standing on it or next to it)
-    if game_map[tile_y][tile_x] == 2: # 2 is box
+    elif tile_under_player == 2: # Box
         for box in boxes:
-            if box.rect.collidepoint(player_pos):
+            if box.rect.collidepoint(player.pos):
                 return box
-    elif game_map[tile_y][tile_x] == 0: # Must be on a floor tile to enter
-        for dx, dy in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
-            check_x, check_y = tile_x + dx, tile_y + dy
-            if 0 <= check_y < len(game_map) and 0 <= check_x < len(game_map[0]):
-                if game_map[check_y][check_x] == 2: # 2 is box
-                    for box in boxes:
-                        if box.rect.collidepoint(check_x * 16 + 8, check_y * 16 + 8):
-                            return box
 
     return None
 
@@ -64,7 +67,7 @@ def main():
     box_sprites = pygame.sprite.Group()
     vent_sprites = pygame.sprite.Group()
     key_sprites = pygame.sprite.Group()
-
+    door_sprites = pygame.sprite.Group()
     player = None
 
     for row_index, row in enumerate(game_map):
@@ -89,6 +92,10 @@ def main():
                 key = Key(x, y)
                 key_sprites.add(key)
                 all_sprites.add(key)
+            elif tile == 5:
+                door = Door(x, y)
+                door_sprites.add(door)
+                all_sprites.add(door)
             elif tile == 0 and player is None:
                 player = Player(x + 8, y + 8)
 
@@ -107,19 +114,24 @@ def main():
                 running = False
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_e:
-                    interactable = get_interactable_object(player.pos, game_map, box_sprites, vent_sprites, key_sprites)
-                    if isinstance(interactable, Key):
-                        inventory.add_item(key_item)
-                        # Update the map to show the key is gone
-                        tile_x = int(interactable.rect.x // 16)
-                        tile_y = int(interactable.rect.y // 16)
-                        game_map[tile_y][tile_x] = 0 # Set tile back to floor
-                        interactable.kill()
-                    elif isinstance(interactable, (Box, Vent)):
-                        if player.hidden:
-                            player.unhide()
-                        else:
-                            player.hide(interactable)
+                    interactable = get_interactable_object(player, game_map, box_sprites, vent_sprites, key_sprites, door_sprites)
+                    if interactable:
+                        if isinstance(interactable, Door):
+                            selected_item = inventory.get_selected_item()
+                            if selected_item == key_item:
+                                interactable.unlock()
+                                key_pickup_sound.play()
+                                inventory.drop_item() # Removes key from selected slot
+                        elif isinstance(interactable, Key):
+                            inventory.add_item(key_item)
+                            key_pickup_sound.play()
+                            game_map[interactable.rect.y // 16][interactable.rect.x // 16] = 0
+                            interactable.kill()
+                        elif isinstance(interactable, (Box, Vent)):
+                            if player.hidden:
+                                player.unhide()
+                            else:
+                                player.hide(interactable)
                 if event.key == pygame.K_1:
                     inventory.selected_slot = 0
                 if event.key == pygame.K_2:
@@ -144,7 +156,7 @@ def main():
 
         display.fill((0, 0, 0))
 
-        player.update(dt, wall_sprites, box_sprites)
+        player.update(dt, wall_sprites, box_sprites, door_sprites)
 
         camera_offset_x = player.rect.centerx - display.get_width() / 2
         camera_offset_y = player.rect.centery - display.get_height() / 2

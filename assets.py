@@ -14,7 +14,7 @@ key_drop_sound = pygame.mixer.Sound("Assets/Audio/key_drop.mp3")
 menu_btn_sounds = [pygame.mixer.Sound("Assets/Audio/menu_btn_1.mp3"), pygame.mixer.Sound("Assets/Audio/menu_btn_2.mp3")]
 
 # Set volumes
-pygame.mixer.music.set_volume(0.1)
+pygame.mixer.music.set_volume(0.5)
 footsteps_sound.set_volume(1)
 box_open_sound.set_volume(0.1)
 box_close_sound.set_volume(0.1)

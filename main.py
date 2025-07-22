@@ -1,8 +1,8 @@
 import pygame
 from settings import *
 from assets import *
-from sprites import Player, Wall, Floor, Box, Vent, Key, Door
 from inventory import Inventory
+from sprites import Player, Wall, Floor, Box, Vent, Key, Door
 
 # pygame setup
 pygame.init()
@@ -12,6 +12,7 @@ display = pygame.Surface((256, 256))
 clock = pygame.time.Clock()
 running = True
 dt = 0
+game_map = level_1_map
 
 pygame.mixer.music.play(-1)
 
@@ -65,9 +66,6 @@ def main_menu():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return False  # Quit
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_RETURN:
-                    return True  # Play
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if play_btn_rect.collidepoint(event.pos):
                     return True # Play
@@ -210,8 +208,8 @@ def main():
                             key_drop_sound.play()
                         tile_x = int(player.pos.x // 16)
                         tile_y = int(player.pos.y // 16)
-                        # Prevent dropping items in walls or boxes
-                        if game_map[tile_y][tile_x] not in [1, 2]:
+                        # Prevent dropping items in walls, boxes or vents
+                        if game_map[tile_y][tile_x] not in [1, 2, 3]:
                             game_map[tile_y][tile_x] = 4 # Mark as key
                             new_item = Key(tile_x * 16, tile_y * 16) # Create at topleft of tile
                             all_sprites.add(new_item)
@@ -236,7 +234,8 @@ def main():
         display.blit(fog, (0, 0))
 
         inventory.draw(display)
-
+        player.ui_update(display)
+        
         screen.blit(pygame.transform.scale(display, (screen_width, screen_height)), (0, 0))
 
         if SHOW_VERSION:

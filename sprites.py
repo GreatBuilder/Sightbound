@@ -6,7 +6,9 @@ from assets import (
     footsteps_sound, box_open_sound, box_close_sound,
     vent_open_sound, vent_close_sound
 )
-from settings import game_map
+from settings import level_1_map, display_width, display_height
+
+game_map = level_1_map
 
 class Key(pygame.sprite.Sprite):
     def __init__(self, x, y):
@@ -63,6 +65,7 @@ class Vent(pygame.sprite.Sprite):
 class Player(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
+        # animation + movement
         self.idle_frames = player_idle_imgs
         self.walk_frames = player_walk_imgs
         self.frames = self.idle_frames
@@ -74,12 +77,26 @@ class Player(pygame.sprite.Sprite):
         self.animation_timer = 0
         self.moving = False
         self.direction = 'right'
-        self.speed = 85
+        self.default_speed = 80
+        self.current_speed = self.default_speed
         self.hidden = False
         self.hiding_spot = None
+        # sounds
         self.footsteps_channel = pygame.mixer.Channel(0)
         self.box_channel = pygame.mixer.Channel(1)
         self.vent_channel = pygame.mixer.Channel(2)
+        # sprint
+        self.sprint_speed = 110
+        self.max_sprint_stamina = 400
+        self.current_sprint_stamina = self.max_sprint_stamina
+        # crouch
+        self.crouch_speed = 40
+
+    def ui_update(self, surface):
+        sprint_slider_bg_rect = pygame.Rect(display_width - 38, 6, 32, 4)
+        pygame.draw.rect(surface, (192, 192, 192), sprint_slider_bg_rect)
+        sprint_slider_rect = pygame.Rect(display_width - 38, 6, (self.current_sprint_stamina / self.max_sprint_stamina) * 32, 4)
+        pygame.draw.rect(surface, (255, 255, 0), sprint_slider_rect)
 
     def animate(self, dt):
         self.animation_timer += dt
@@ -141,19 +158,44 @@ class Player(pygame.sprite.Sprite):
             vec.y = -1
         if keys[pygame.K_s] or keys[pygame.K_DOWN]:
             vec.y = 1
-
-        if vec.length() > 0:
+        # Handle movement and sound
+        self.moving = vec.length() > 0
+        if self.moving:
             vec.normalize_ip()
-            if not self.moving:
+            if not self.footsteps_channel.get_busy():
                 self.footsteps_channel.play(footsteps_sound, -1)
-            self.moving = True
         else:
-            if self.moving:
-                self.footsteps_channel.stop()
-            self.moving = False
+            self.footsteps_channel.stop()
+
+        # Determine player state
+        is_crouching = keys[pygame.K_LCTRL]
+        is_sprinting = keys[pygame.K_LSHIFT] and not is_crouching
+
+        # Set speed based on state (Crouch > Sprint > Walk)
+        can_sprint = is_sprinting and self.moving and self.current_sprint_stamina > 0
+
+        if is_crouching:
+            self.current_speed = self.crouch_speed
+        elif can_sprint:
+            self.current_speed = self.sprint_speed
+        else:
+            self.current_speed = self.default_speed
+
+        # Handle stamina changes independently
+        if can_sprint:
+            self.current_sprint_stamina -= 60 * dt  # Drain stamina
+        else:
+            if self.current_sprint_stamina < self.max_sprint_stamina:
+                self.current_sprint_stamina += 30 * dt  # Regain stamina
+
+        # Clamp stamina
+        if self.current_sprint_stamina > self.max_sprint_stamina:
+            self.current_sprint_stamina = self.max_sprint_stamina
+        elif self.current_sprint_stamina < 0:
+            self.current_sprint_stamina = 0
 
         # Horizontal movement and collision
-        self.pos.x += vec.x * self.speed * dt
+        self.pos.x += vec.x * self.current_speed * dt
         self.rect.centerx = round(self.pos.x)
         
         all_obstacles = walls.sprites() + boxes.sprites() + doors.sprites()
@@ -167,7 +209,7 @@ class Player(pygame.sprite.Sprite):
         self.pos.x = self.rect.centerx
 
         # Vertical movement and collision
-        self.pos.y += vec.y * self.speed * dt
+        self.pos.y += vec.y * self.current_speed * dt
         self.rect.centery = round(self.pos.y)
 
         for obstacle in all_obstacles:

@@ -4,8 +4,12 @@ import pygame
 screen_width = 850
 screen_height = 850
 
+# Display dimensions
+display_width = 256
+display_height = 256
+
 # Version
-VERSION = "Version 0.0.5 Added Main Menu"
+VERSION = "Version 0.0.6 Updated Movement"
 SHOW_VERSION = True
 
 # Lighting
@@ -13,8 +17,8 @@ NIGHT_COLOR = (5, 5, 5, 252)
 LIGHT_RADIUS = 20
 LIGHT_COLOR = (20, 20, 20, 220)
 
-# Game Map
-game_map = [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+# Level 1
+level_1_map = [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
             [1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 1, 0, 0, 1],
             [1, 0, 2, 0, 1, 0, 3, 1, 1, 1, 1, 1, 1, 0, 0, 0, 5, 0, 3, 1],
             [1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1],

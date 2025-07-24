@@ -1,10 +1,10 @@
 import pygame
 from item_type import ItemType
-from assets import key_pickup_sound, key_drop_sound, key_item
+from assets import inv_slot_img, inv_select_img, key_pickup_sound, key_drop_sound, key_item
 from settings import display_width, display_height
 
 class Inventory:
-    def __init__(self, inv_slot_img, inv_select_img):
+    def __init__(self):
         self.items = []
         self.inv_slot_img = inv_slot_img
         self.inv_select_img = inv_select_img

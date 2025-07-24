@@ -1,12 +1,10 @@
 import pygame
-
-from assets import (
-    wall_img, floor_img, box_img, vent_img, key_img, door_img,
-    player_idle_imgs, player_walk_imgs,
-    footsteps_sound, box_open_sound, box_close_sound,
-    vent_open_sound, vent_close_sound
-)
 from settings import level_1_map, display_width, display_height
+from assets import (
+    player_idle_imgs, player_walk_imgs, footsteps_sound,
+    box_open_sound, box_close_sound, vent_open_sound, vent_close_sound,
+    key_img, door_img, wall_img, floor_img, box_img, vent_img
+)
 
 game_map = level_1_map
 

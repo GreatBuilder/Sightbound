@@ -13,9 +13,11 @@ clock = pygame.time.Clock()
 running = True
 dt = 0
 game_map = level_1_map
-
-pygame.mixer.music.play(-1)
 key_channel = pygame.mixer.Channel(3)
+
+# game states
+game_paused = False
+pause_btn_hovered = False
 
 def get_interactable_object(player, game_map, boxes, vents, keys, doors):
     player_tile_x = int(player.pos[0] // 16)
@@ -59,29 +61,19 @@ def main_menu():
     settings_gear_hovered = False
     while True:
         play_btn_rect = play_btn_img.get_rect(center=(screen_width // 2, (screen_height // 2) + 325))
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                return False  # Quit
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if play_btn_rect.collidepoint(event.pos):
-                    return True # Play
-
-        screen.fill((0, 0, 0))
-        screen.blit(main_menu_img, (0, 0))
-
         settings_gear_rect = settings_gear_img.get_rect(bottomright=(screen_width - 10, screen_height - 10))
+        
+        screen.blit(main_menu_img, (0, 0))
         
         # play button hover
         if play_btn_rect.collidepoint(pygame.mouse.get_pos()):
-            scaled_play_btn_img = pygame.transform.scale(play_btn_img, (228, 155))
+            scaled_play_btn_img = pygame.transform.scale(play_btn_img, (309, 160))
             if not play_btn_hovered:
                 menu_btn_sounds[0].play()
                 play_btn_hovered = True
         else:
-            scaled_play_btn_img = pygame.transform.scale(play_btn_img, (215, 146))
+            scaled_play_btn_img = pygame.transform.scale(play_btn_img, (290, 150))
             if play_btn_hovered:
-                menu_btn_sounds[1].play()
                 play_btn_hovered = False
 
         scaled_play_btn_rect = scaled_play_btn_img.get_rect(center=(screen_width // 2, (screen_height // 2) + 325))
@@ -91,14 +83,13 @@ def main_menu():
 
         # settings gear hover
         if settings_gear_rect.collidepoint(pygame.mouse.get_pos()):
-            scaled_settings_gear_img = pygame.transform.scale(settings_gear_img, (86, 86))
+            scaled_settings_gear_img = pygame.transform.scale(settings_gear_img, (106, 98))
             if not settings_gear_hovered:
                 menu_btn_sounds[0].play()
                 settings_gear_hovered = True
         else:
-            scaled_settings_gear_img = pygame.transform.scale(settings_gear_img, (80, 80))
+            scaled_settings_gear_img = pygame.transform.scale(settings_gear_img, (98, 90))
             if settings_gear_hovered:
-                menu_btn_sounds[1].play()
                 settings_gear_hovered = False
 
         # update settings gear button on the screen
@@ -112,11 +103,135 @@ def main_menu():
             text_rect = text.get_rect(topleft=(10, 10))
             screen.blit(text, text_rect)
 
+        # Handle events after buttons are positioned
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                menu_btn_sounds[2].play()
+                return False  # Quit
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if scaled_play_btn_rect.collidepoint(event.pos):
+                    return True # Play
+                if scaled_settings_gear_rect.collidepoint(event.pos):
+                    menu_btn_sounds[2].play()
+                    return "settings" # Open settings menu
+
+        pygame.display.flip()
+        clock.tick(60)
+
+def settings():
+    global vol_btn_img
+    global game_paused
+    back_btn_hovered = False
+    info_btn_hovered = False
+    vol_btn_hovered = False
+    vol_btn_state = "full"
+    while True:
+        screen.fill((0, 0, 0))
+        screen.blit(settings_menu_img, (0, 0))
+        mouse_pos = pygame.mouse.get_pos()
+
+        # --- Back Button --- #
+        # Use a temporary rect for initial collision check
+        temp_back_rect = pygame.transform.scale(back_btn_img, (113, 90)).get_rect(bottomright=(screen_width - 10, screen_height - 10))
+        if 'scaled_back_btn_rect' in locals(): # Use previous frame's rect if available
+            temp_back_rect = scaled_back_btn_rect
+
+        if temp_back_rect.collidepoint(mouse_pos):
+            scaled_back_btn_img = pygame.transform.scale(back_btn_img, (123, 98))
+            if not back_btn_hovered:
+                menu_btn_sounds[0].play()
+                back_btn_hovered = True
+        else:
+            scaled_back_btn_img = pygame.transform.scale(back_btn_img, (113, 90))
+            if back_btn_hovered:
+                back_btn_hovered = False
+        scaled_back_btn_rect = scaled_back_btn_img.get_rect(bottomright=(screen_width - 10, screen_height - 10))
+        screen.blit(scaled_back_btn_img, scaled_back_btn_rect)
+
+        # --- Info Button --- #
+        temp_info_rect = pygame.transform.scale(info_btn_img, (90, 90)).get_rect(bottomleft=(10, screen_height - 10))
+        if 'scaled_info_btn_rect' in locals():
+            temp_info_rect = scaled_info_btn_rect
+
+        if temp_info_rect.collidepoint(mouse_pos):
+            scaled_info_btn_img = pygame.transform.scale(info_btn_img, (100, 100))
+            if not info_btn_hovered:
+                menu_btn_sounds[0].play()
+                info_btn_hovered = True
+        else:
+            scaled_info_btn_img = pygame.transform.scale(info_btn_img, (90, 90))
+            if info_btn_hovered:
+                info_btn_hovered = False
+        scaled_info_btn_rect = scaled_info_btn_img.get_rect(bottomleft=(10, screen_height - 10))
+        screen.blit(scaled_info_btn_img, scaled_info_btn_rect)
+
+        # --- Volume Button --- #
+        temp_vol_rect = pygame.transform.scale(vol_btn_img, (95, 90)).get_rect(center=(75, 300))
+        if 'scaled_vol_btn_rect' in locals():
+            temp_vol_rect = scaled_vol_btn_rect
+
+        if temp_vol_rect.collidepoint(mouse_pos):
+            scaled_vol_btn_img = pygame.transform.scale(vol_btn_img, (110, 100))
+            if not vol_btn_hovered:
+                menu_btn_sounds[0].play()
+                vol_btn_hovered = True
+        else:
+            scaled_vol_btn_img = pygame.transform.scale(vol_btn_img, (95, 90))
+            if vol_btn_hovered:
+                vol_btn_hovered = False
+        scaled_vol_btn_rect = scaled_vol_btn_img.get_rect(center=(75, 300))
+        screen.blit(scaled_vol_btn_img, scaled_vol_btn_rect)
+
+        # Handle events after buttons are positioned
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    menu_btn_sounds[2].play()
+                    return True
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if scaled_back_btn_rect.collidepoint(event.pos):
+                    menu_btn_sounds[2].play()
+                    if not game_paused:
+                        return True
+                    else:
+                        return 'paused'
+                if scaled_info_btn_rect.collidepoint(event.pos):
+                    # Display popup with how to play the game
+                    menu_btn_sounds[2].play()
+                    pass
+                if scaled_vol_btn_rect.collidepoint(event.pos):
+                    # change sprite to mute
+                    menu_btn_sounds[2].play()
+                    if vol_btn_state == "full":
+                        vol_btn_state = "mute"
+                        vol_btn_img = pygame.image.load("Assets/UI/vol_mute.png")
+                        pygame.mixer.music.set_volume(0)
+                        footsteps_sound.set_volume(0)
+                        box_open_sound.set_volume(0)
+                        box_close_sound.set_volume(0)
+                        vent_open_sound.set_volume(0)
+                        vent_close_sound.set_volume(0)
+                        key_pickup_sound.set_volume(0)
+                        key_drop_sound.set_volume(0)
+                    else:
+                        vol_btn_state = "full"
+                        pygame.mixer.music.set_volume(1)
+                        vol_btn_img = pygame.image.load("Assets/UI/vol_full.png")
+                        footsteps_sound.set_volume(footsteps)
+                        box_open_sound.set_volume(boxes)
+                        box_close_sound.set_volume(boxes)
+                        vent_open_sound.set_volume(vents)
+                        vent_close_sound.set_volume(vents)
+                        key_pickup_sound.set_volume(keys)
+                        key_drop_sound.set_volume(keys)
+
         pygame.display.flip()
         clock.tick(60)
 
 def main():
-    global running, dt
+    global running, dt, game_paused, pause_btn_hovered
 
     all_sprites = pygame.sprite.Group()
     wall_sprites = pygame.sprite.Group()
@@ -160,7 +275,7 @@ def main():
         print("No starting position for player found!")
         return
 
-    inventory = Inventory(inv_slot_img, inv_select_img)
+    inventory = Inventory()
 
     # Lighting surface
     fog = pygame.Surface((display.get_width(), display.get_height()), pygame.SRCALPHA)
@@ -202,7 +317,6 @@ def main():
                     if dropped_item_type:
                         if dropped_item_type == key_item:
                             key_channel.play(key_drop_sound)
-                            print("played drop sound")
                         tile_x = int(player.pos.x // 16)
                         tile_y = int(player.pos.y // 16)
                         # Prevent dropping items in walls, boxes or vents
@@ -230,10 +344,28 @@ def main():
         pygame.draw.circle(fog, LIGHT_COLOR, player_center_on_display, LIGHT_RADIUS)
         display.blit(fog, (0, 0))
 
+        # --- Pause Button --- #
+        mouse_pos = pygame.mouse.get_pos()
+        temp_pause_rect = pygame.transform.scale(pause_btn_img, (103, 90)).get_rect(topright=(screen_width - 10, 10))
+        if 'scaled_pause_btn_rect' in locals():
+            temp_pause_rect = scaled_pause_btn_rect
+
+        if temp_pause_rect.collidepoint(mouse_pos):
+            scaled_pause_btn_img = pygame.transform.scale(pause_btn_img, (113, 100))
+            if not pause_btn_hovered:
+                menu_btn_sounds[0].play()
+                pause_btn_hovered = True
+        else:
+            scaled_pause_btn_img = pygame.transform.scale(pause_btn_img, (103, 90))
+            if pause_btn_hovered:
+                pause_btn_hovered = False
+        scaled_pause_btn_rect = scaled_pause_btn_img.get_rect(topright=(screen_width - 10, 10))
+
         inventory.draw(display)
         player.ui_update(display)
         
         screen.blit(pygame.transform.scale(display, (screen_width, screen_height)), (0, 0))
+        screen.blit(scaled_pause_btn_img, scaled_pause_btn_rect)
 
         if SHOW_VERSION:
             font = pygame.font.Font(None, 24)
@@ -242,9 +374,19 @@ def main():
             screen.blit(text, text_rect)
 
         pygame.display.flip()
+
         dt = clock.tick(60) / 1000
+    pygame.quit()
 
-if main_menu():
-    main()
-
-pygame.quit()
+# Game loop
+while True:
+    choice = main_menu()
+    if choice is True:
+        pygame.mixer.music.play(-1)
+        main()
+    elif choice == "settings":
+        settings_result = settings()
+        if settings_result is False:
+            break
+    else:  # Quit
+        break
